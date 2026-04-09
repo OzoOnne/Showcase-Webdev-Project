@@ -38,5 +38,14 @@ namespace Showcase_API.Controllers
 
             return Ok(festival);
         }
+
+        [HttpPost]
+        public async Task<ActionResult<Festival>> CreateFestival(Festival festival)
+        {
+            _context.Festivals.Add(festival);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetFestival), new { id = festival.Id }, festival);
+        }
     }
 }
