@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="Showcase-API/Showcase-API.csproj" Id="eccaac25-dbf3-41c4-8759-4682ce32b8b4" />
   <Project Path="Showcase-project/Showcase-project.csproj" />
 </Solution>
