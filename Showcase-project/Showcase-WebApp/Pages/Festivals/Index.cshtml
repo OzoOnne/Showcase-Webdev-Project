@@ -3,6 +3,10 @@
 
 <h1>Festival Overzicht</h1>
 
+<a asp-page="/Festivals/Create" class="btn btn-primary mb-3">
+    Festival toevoegen
+</a>
+
 @if (!Model.Festivals.Any())
 {
     <p>Er zijn momenteel geen festivals beschikbaar.</p>
