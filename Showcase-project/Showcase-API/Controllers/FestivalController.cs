@@ -47,5 +47,31 @@ namespace Showcase_API.Controllers
 
             return CreatedAtAction(nameof(GetFestival), new { id = festival.Id }, festival);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateFestival(int id, Festival updatedFestival)
+        {
+            if (id != updatedFestival.Id)
+            {
+                return BadRequest();
+            }
+
+            var existingFestival = await _context.Festivals.FindAsync(id);
+
+            if (existingFestival is null)
+            {
+                return NotFound();
+            }
+
+            existingFestival.Name = updatedFestival.Name;
+            existingFestival.Location = updatedFestival.Location;
+            existingFestival.Date = updatedFestival.Date;
+            existingFestival.Genre = updatedFestival.Genre;
+            existingFestival.Description = updatedFestival.Description;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
