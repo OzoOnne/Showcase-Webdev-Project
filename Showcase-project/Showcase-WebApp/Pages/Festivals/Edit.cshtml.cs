@@ -15,9 +15,6 @@ namespace Showcase_WebApp.Pages.Festivals
         {
             _httpClientFactory = httpClientFactory;
         }
-        public void OnGet()
-        {
-        }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
@@ -43,7 +40,7 @@ namespace Showcase_WebApp.Pages.Festivals
 
             Festival.Date = DateTime.SpecifyKind(Festival.Date, DateTimeKind.Utc);
 
-            var response = await client.PutAsJsonAsync($"api/festivals/{Festival.Id}", Festival);
+            var response = await client.PutAsJsonAsync($"api/festival/{Festival.Id}", Festival);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -53,6 +50,5 @@ namespace Showcase_WebApp.Pages.Festivals
 
             return RedirectToPage("/Festivals/Index");
         }
-    }
     }
 }
