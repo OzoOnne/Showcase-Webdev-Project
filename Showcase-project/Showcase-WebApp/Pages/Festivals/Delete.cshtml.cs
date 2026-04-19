@@ -4,14 +4,14 @@ using Showcase_WebApp.Models;
 
 namespace Showcase_WebApp.Pages.Festivals
 {
-    public class EditModel : PageModel
+    public class DeleteModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
 
         [BindProperty]
         public FestivalDto Festival { get; set; } = new();
 
-        public EditModel(IHttpClientFactory httpClientFactory)
+        public DeleteModel(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
         }
@@ -19,8 +19,10 @@ namespace Showcase_WebApp.Pages.Festivals
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var client = _httpClientFactory.CreateClient("FestivalApi");
+
             var festival = await client.GetFromJsonAsync<FestivalDto>($"api/festival/{id}");
-            if (festival == null)
+
+            if (festival is null)
             {
                 return NotFound();
             }
@@ -29,22 +31,15 @@ namespace Showcase_WebApp.Pages.Festivals
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return Page();
-            }
-
             var client = _httpClientFactory.CreateClient("FestivalApi");
 
-            Festival.Date = DateTime.SpecifyKind(Festival.Date, DateTimeKind.Utc);
-
-            var response = await client.PutAsJsonAsync($"api/festival/{Festival.Id}", Festival);
+            var response = await client.DeleteAsync($"api/festival/{id}");
 
             if (!response.IsSuccessStatusCode)
             {
-                ModelState.AddModelError(string.Empty, "Er ging iets mis bij het updaten van het festival.");
+                ModelState.AddModelError(string.Empty, "Er ging iets mis bij het verwijderen van het festival.");
                 return Page();
             }
 
