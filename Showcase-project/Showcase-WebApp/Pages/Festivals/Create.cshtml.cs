@@ -40,6 +40,6 @@ public class CreateModel : PageModel
             return Page();
         }
 
-        return RedirectToPage("/Festivals/Index");
+        return RedirectToPage("/Index");
     }
 }

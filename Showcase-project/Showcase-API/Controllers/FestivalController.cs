@@ -73,5 +73,21 @@ namespace Showcase_API.Controllers
 
             return NoContent();
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteFestival(int id)
+        {
+            var festival = await _context.Festivals.FindAsync(id);
+
+            if (festival is null)
+            {
+                return NotFound();
+            }
+
+            _context.Festivals.Remove(festival);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
