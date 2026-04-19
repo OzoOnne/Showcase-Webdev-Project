@@ -1,0 +1,44 @@
+﻿@page "{id:int}"
+@model Showcase_WebApp.Pages.Festivals.EditModel
+
+<h1>Festival bewerken</h1>
+
+<form method="post">
+    <input type="hidden" asp-for="Festival.Id" />
+    <div class="mb-3">
+        <label asp-for="Festival.Name" class="form-label"></label>
+        <input asp-for="Festival.Name" class="form-control" />
+        <span asp-validation-for="Festival.Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Festival.Location" class="form-label"></label>
+        <input asp-for="Festival.Location" class="form-control" />
+        <span asp-validation-for="Festival.Location" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Festival.Date" class="form-label"></label>
+        <input asp-for="Festival.Date" type="date" class="form-control" />
+        <span asp-validation-for="Festival.Date" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Festival.Genre" class="form-label"></label>
+        <input asp-for="Festival.Genre" class="form-control" />
+        <span asp-validation-for="Festival.Genre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Festival.Description" class="form-label"></label>
+        <textarea asp-for="Festival.Description" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Festival.Description" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Opslaan</button>
+    <a asp-page="/Festivals/Index" class="btn btn-secondary">Terug</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

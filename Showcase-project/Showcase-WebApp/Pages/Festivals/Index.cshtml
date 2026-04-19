@@ -24,6 +24,8 @@ else
                         <p><strong>Datum:</strong> @festival.Date.ToString("dd-MM-yyyy")</p>
                         <p><strong>Genre:</strong> @festival.Genre</p>
                         <p>@festival.Description</p>
+
+                        <a asp-page="/Festivals/Edit" asp-route-id="@festival.Id" class="btn btn-sm btn-warning">Bewerken</a>
                     </div>
                 </div>
             </div>
