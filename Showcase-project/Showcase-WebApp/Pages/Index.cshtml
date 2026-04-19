@@ -1,0 +1,38 @@
+﻿@page
+@model Showcase_WebApp.Pages.IndexModel
+
+<h1>Festival Overzicht</h1>
+
+<a asp-page="/Festivals/Create" class="btn btn-primary mb-3">
+    Festival toevoegen
+</a>
+
+@if (!Model.Festivals.Any())
+{
+    <p>Er zijn momenteel geen festivals beschikbaar.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var festival in Model.Festivals)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@festival.Name</h5>
+                        <p><strong>Locatie:</strong> @festival.Location</p>
+                        <p><strong>Datum:</strong> @festival.Date.ToString("dd-MM-yyyy")</p>
+                        <p><strong>Genre:</strong> @festival.Genre</p>
+                        <p>@festival.Description</p>
+
+                        <a asp-page="/Festivals/Edit" asp-route-id="@festival.Id" class="btn btn-sm btn-warning">Bewerken</a>
+
+                        <a asp-page="/Festivals/Delete" asp-route-id="@festival.Id" class="btn btn-danger">
+                            Verwijderen
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
