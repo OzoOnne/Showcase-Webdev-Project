@@ -1,0 +1,50 @@
+﻿@page
+@model Showcase_WebApp.Pages.Auth.AccountModel
+
+<h1>Account</h1>
+
+<a asp-page="/Auth/Account" asp-route-mode="login" class="btn btn-outline-primary">Inloggen</a>
+<a asp-page="/Auth/Account" asp-route-mode="register" class="btn btn-outline-secondary">Registreren</a>
+
+<hr />
+
+@if (Model.Mode == "register")
+{
+    <h2>Registreren</h2>
+
+    <form method="post" asp-page-handler="Register">
+        @* show both field and model errors *@
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        <input asp-for="RegisterInput.Email" class="form-control mb-2" placeholder="E-mail" />
+        <span asp-validation-for="RegisterInput.Email" class="text-danger"></span>
+
+        <input asp-for="RegisterInput.Password" type="password" class="form-control mb-2" placeholder="Wachtwoord" />
+        <span asp-validation-for="RegisterInput.Password" class="text-danger"></span>
+
+        <input asp-for="RegisterInput.ConfirmPassword" type="password" class="form-control mb-2" placeholder="Bevestig wachtwoord" />
+        <span asp-validation-for="RegisterInput.ConfirmPassword" class="text-danger"></span>
+
+        <button type="submit" class="btn btn-primary">Registreren</button>
+    </form>
+}
+else
+{
+    <h2>Inloggen</h2>
+
+    <form method="post" asp-page-handler="Login">
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        <input asp-for="LoginInput.Email" class="form-control mb-2" placeholder="E-mail" />
+        <span asp-validation-for="LoginInput.Email" class="text-danger"></span>
+
+        <input asp-for="LoginInput.Password" type="password" class="form-control mb-2" placeholder="Wachtwoord" />
+        <span asp-validation-for="LoginInput.Password" class="text-danger"></span>
+
+        <button type="submit" class="btn btn-primary">Inloggen</button>
+    </form>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

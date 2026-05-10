@@ -17,6 +17,7 @@ builder.Services.AddAuthorization();
 builder.Services
 .AddIdentityApiEndpoints<IdentityUser>()
 .AddEntityFrameworkStores<AuthDbContext>();
+builder.Services.AddAuthentication();
 
 
 builder.Services.AddCors(options =>
@@ -41,6 +42,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowWebApp");
