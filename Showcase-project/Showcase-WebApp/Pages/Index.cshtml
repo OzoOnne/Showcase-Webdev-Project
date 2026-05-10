@@ -1,40 +1,239 @@
 ﻿@page
 @model Showcase_WebApp.Pages.IndexModel
+@using System.Text.Json
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
-<h1>Festival Overzicht</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Festivals</title>
+</head>
+<body>
+    @{
+        var email = User.Identity?.Name
+                    ?? User.FindFirst("email")?.Value
+                    ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
 
-<a asp-page="/Festivals/Create" class="btn btn-primary mb-3">
-    Festival toevoegen
-</a>
+        // serialize festivals once for client-side use
+        var festivalsJson = JsonSerializer.Serialize(Model.Festivals);
+    }
 
-@if (!Model.Festivals.Any())
-{
-    <p>Er zijn momenteel geen festivals beschikbaar.</p>
-}
-else
-{
-    <div class="row">
-        @foreach (var festival in Model.Festivals)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">@festival.Name</h5>
-                        <p><strong>Locatie:</strong> @festival.Location</p>
-                        <p><strong>Datum:</strong> @festival.Date.ToString("dd-MM-yyyy")</p>
-                        <p><strong>Genre:</strong> @festival.Genre</p>
-                        <p>@festival.Description</p>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <h1 class="mb-3">Hallo @email</h1>
+    }
+    else
+    {
+        <h1 class="mb-3">Hallo gast</h1>
+    }
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <a asp-page="/Festivals/Edit" asp-route-id="@festival.Id" class="btn btn-sm btn-warning">Bewerken</a>
-                            <a asp-page="/Festivals/Delete" asp-route-id="@festival.Id" class="btn btn-danger">
-                                Verwijderen
-                            </a>
-                        }
+    <h1>Festival Overzicht</h1>
+
+    <a asp-page="/Festivals/Create" class="btn btn-primary mb-3">
+        Festival toevoegen
+    </a>
+
+    @if (!Model.Festivals.Any())
+    {
+        <p>Er zijn momenteel geen festivals beschikbaar.</p>
+    }
+    else
+    {
+        <div id="festivals" class="row">
+            @foreach (var festival in Model.Festivals)
+            {
+                <div class="col-md-4 mb-4 festival-card" data-id="@festival.Id">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@festival.Name</h5>
+                            <p><strong>Locatie:</strong> @festival.Location</p>
+                            <p><strong>Datum:</strong> @festival.Date.ToString("dd-MM-yyyy")</p>
+                            <p><strong>Genre:</strong> @festival.Genre</p>
+                            <p>@festival.Description</p>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-page="/Festivals/Edit" asp-route-id="@festival.Id" class="btn btn-sm btn-warning">Bewerken</a>
+                                <a asp-page="/Festivals/Delete" asp-route-id="@festival.Id" class="btn btn-danger">
+                                    Verwijderen
+                                </a>
+                            }
+
+                            <button type="button"
+                                    class="btn btn-primary mb-3 favorite-btn"
+                                    data-id="@festival.Id">
+                                Favoriet
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
-}
+            }
+        </div>
+    }
+
+    <h2>Your Favorites</h2>
+    <div id="favorites" class="row"></div>
+
+    <script>
+        // simple local favorites stored in localStorage; favorites are shown as full festival cards
+        (function () {
+            const STORAGE_KEY = 'showcase:favorites';
+            // FESTIVALS injected from server
+            const FESTIVALS = @Html.Raw(festivalsJson);
+            const FESTIVAL_MAP = {};
+            // Note: model properties are PascalCase (Id, Name, Location, Date, Genre, Description)
+            FESTIVALS.forEach(f => FESTIVAL_MAP[f.Id] = f);
+
+            function loadFavorites() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    return raw ? JSON.parse(raw) : [];
+                } catch (e) {
+                    console.error('Failed to read favorites', e);
+                    return [];
+                }
+            }
+
+            function saveFavorites(favs) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+                } catch (e) {
+                    console.error('Failed to save favorites', e);
+                }
+            }
+
+            function isFavorited(id, favs) {
+                return favs.some(f => f.festivalId === id);
+            }
+
+            function createFestivalCard(festival, includeUnfavoriteButton = false) {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-4';
+
+                const card = document.createElement('div');
+                card.className = 'card h-100';
+
+                const body = document.createElement('div');
+                body.className = 'card-body';
+
+                const title = document.createElement('h5');
+                title.className = 'card-title';
+                title.textContent = festival.Name;
+
+                const loc = document.createElement('p');
+                loc.innerHTML = `<strong>Locatie:</strong> ${festival.Location}`;
+
+                const date = document.createElement('p');
+                date.innerHTML = `<strong>Datum:</strong> ${new Date(festival.Date).toLocaleDateString()}`;
+
+                const genre = document.createElement('p');
+                genre.innerHTML = `<strong>Genre:</strong> ${festival.Genre}`;
+
+                const desc = document.createElement('p');
+                desc.textContent = festival.Description || '';
+
+                body.appendChild(title);
+                body.appendChild(loc);
+                body.appendChild(date);
+                body.appendChild(genre);
+                body.appendChild(desc);
+
+                if (includeUnfavoriteButton) {
+                    const unfavBtn = document.createElement('button');
+                    unfavBtn.type = 'button';
+                    unfavBtn.className = 'btn btn-danger mb-3 unfavorite-btn';
+                    unfavBtn.dataset.id = festival.Id;
+                    unfavBtn.textContent = 'Verwijder favoriet';
+                    body.appendChild(unfavBtn);
+                }
+
+                card.appendChild(body);
+                col.appendChild(card);
+                return col;
+            }
+
+            function renderFavoritesList() {
+                const favs = loadFavorites();
+                const favDiv = document.getElementById('favorites');
+                favDiv.innerHTML = '';
+                if (!favs || favs.length === 0) {
+                    favDiv.textContent = 'No favorites yet.';
+                    return;
+                }
+
+                favs.forEach(f => {
+                    const festival = FESTIVAL_MAP[f.festivalId];
+                    if (!festival) {
+                        // fallback: show id if festival missing
+                        const fe = document.createElement('div');
+                        fe.className = 'col-12';
+                        fe.textContent = `Festival id ${f.festivalId} — saved ${new Date(f.createdAt).toLocaleString()}`;
+                        favDiv.appendChild(fe);
+                        return;
+                    }
+                    const cardEl = createFestivalCard(festival, true);
+                    favDiv.appendChild(cardEl);
+                });
+
+                // bind unfavorite buttons inside favorites list
+                favDiv.querySelectorAll('.unfavorite-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = Number(btn.dataset.id);
+                        if (!id) return;
+                        let current = loadFavorites();
+                        current = current.filter(x => x.festivalId !== id);
+                        saveFavorites(current);
+                        // update overview buttons
+                        const overviewBtn = document.querySelector(`.favorite-btn[data-id="${id}"]`);
+                        if (overviewBtn) {
+                            overviewBtn.textContent = 'Favoriet';
+                            overviewBtn.classList.remove('btn-success');
+                            overviewBtn.classList.add('btn-primary');
+                        }
+                        renderFavoritesList();
+                    });
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const favs = loadFavorites();
+
+                document.querySelectorAll('.favorite-btn').forEach(btn => {
+                    const id = Number(btn.dataset.id);
+                    if (!id) return;
+
+                    // initial state
+                    if (isFavorited(id, favs)) {
+                        btn.textContent = 'Opgeslagen';
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-success');
+                    }
+
+                    btn.addEventListener('click', () => {
+                        let current = loadFavorites();
+                        if (isFavorited(id, current)) {
+                            // remove
+                            current = current.filter(f => f.festivalId !== id);
+                            saveFavorites(current);
+                            btn.textContent = 'Favoriet';
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-primary');
+                        } else {
+                            // add
+                            current.push({ festivalId: id, createdAt: new Date().toISOString() });
+                            saveFavorites(current);
+                            btn.textContent = 'Opgeslagen';
+                            btn.classList.remove('btn-primary');
+                            btn.classList.add('btn-success');
+                        }
+                        renderFavoritesList();
+                    });
+                });
+
+                renderFavoritesList();
+            });
+        })();
+    </script>
+</body>
+</html>
