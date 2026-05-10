@@ -1,27 +1,27 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Showcase_API.Data;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AuthConnection")));
+builder.Services.AddDbContext<FavoritesDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddAuthorization();
 
-
-// inside an extension: only add Identity if not already registered
+// Identity registration (existing)
 if (!builder.Services.Any(sd => sd.ServiceType == typeof(UserManager<IdentityUser>)))
 {
     builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     {
-        // optional: tune password / lockout rules here
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
@@ -34,14 +34,26 @@ if (!builder.Services.Any(sd => sd.ServiceType == typeof(UserManager<IdentityUse
     .AddDefaultTokenProviders();
 }
 
+// IMPORTANT: configure application cookie to allow cross-site usage from your webapp
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    // When the web app and API run on different ports, the auth cookie is considered cross-site.
+    // To allow the browser to send it from the webapp origin, we need SameSite=None and Secure.
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    // Do not set Cookie.Domain unless you need a specific domain.
+});
 
+// Restrict CORS to your web app origin and allow credentials
+var webAppOrigin = "https://localhost:7227"; // adjust if your webapp uses a different origin
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(webAppOrigin)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -56,11 +68,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
+
+// CORS must run before authentication/authorization for preflight & credentials handling
+app.UseCors("AllowWebApp");
+
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseHttpsRedirection();
-app.UseCors("AllowWebApp");
 
 app.MapControllers();
 
