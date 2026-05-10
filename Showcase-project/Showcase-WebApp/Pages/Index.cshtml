@@ -25,11 +25,13 @@ else
                         <p><strong>Genre:</strong> @festival.Genre</p>
                         <p>@festival.Description</p>
 
-                        <a asp-page="/Festivals/Edit" asp-route-id="@festival.Id" class="btn btn-sm btn-warning">Bewerken</a>
-
-                        <a asp-page="/Festivals/Delete" asp-route-id="@festival.Id" class="btn btn-danger">
-                            Verwijderen
-                        </a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-page="/Festivals/Edit" asp-route-id="@festival.Id" class="btn btn-sm btn-warning">Bewerken</a>
+                            <a asp-page="/Festivals/Delete" asp-route-id="@festival.Id" class="btn btn-danger">
+                                Verwijderen
+                            </a>
+                        }
                     </div>
                 </div>
             </div>

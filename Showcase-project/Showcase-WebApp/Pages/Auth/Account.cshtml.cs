@@ -3,6 +3,10 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Text.Json;
 using Showcase_WebApp.Models;
 
 namespace Showcase_WebApp.Pages.Auth;
@@ -26,10 +30,7 @@ public class AccountModel : PageModel
 
     public string Mode { get; set; } = "login";
 
-    public void OnGet(string mode = "login")
-    {
-        Mode = mode;
-    }
+    public void OnGet(string mode = "login") => Mode = mode;
 
     public async Task<IActionResult> OnPostLoginAsync()
     {
@@ -56,7 +57,38 @@ public class AccountModel : PageModel
             return Page();
         }
 
-        _logger.LogInformation("User logged in: {Email}", LoginInput.Email);
+        // Try to read roles from the API response (adjust to your API shape)
+        var content = await response.Content.ReadAsStringAsync();
+        var roles = new List<string>();
+
+        try
+        {
+            using var doc = JsonDocument.Parse(content);
+            if (doc.RootElement.TryGetProperty("roles", out var rolesElem) && rolesElem.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var r in rolesElem.EnumerateArray())
+                {
+                    var role = r.GetString();
+                    if (!string.IsNullOrEmpty(role)) roles.Add(role);
+                }
+            }
+        }
+        catch (JsonException) { /* ignore parse errors - roles empty */ }
+
+        // Build claims (always include Name)
+        var claims = new List<Claim> { new Claim(ClaimTypes.Name, LoginInput.Email) };
+        foreach (var role in roles.Distinct())
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        // Sign in with cookie
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+        _logger.LogInformation("User logged in: {Email} (roles: {Roles})", LoginInput.Email, string.Join(",", roles));
         return RedirectToPage("/Index");
     }
 
