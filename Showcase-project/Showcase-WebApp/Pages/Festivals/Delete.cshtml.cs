@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Showcase_WebApp.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Showcase_WebApp.Pages.Festivals
 {
+    [Authorize(Roles = "Admin")]
     public class DeleteModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
