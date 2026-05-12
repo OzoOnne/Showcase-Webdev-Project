@@ -2,7 +2,9 @@ name: .NET Razor Pages CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
